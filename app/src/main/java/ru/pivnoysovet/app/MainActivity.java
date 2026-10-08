@@ -1,6 +1,7 @@
 package ru.pivnoysovet.app;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -23,7 +24,9 @@ public class MainActivity extends Activity {
         web.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                return !"file".equals(request.getUrl().getScheme());
+                if ("file".equals(request.getUrl().getScheme())) return false;
+                try { startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl())); } catch (Exception ignored) { }
+                return true;
             }
         });
         setContentView(web);
