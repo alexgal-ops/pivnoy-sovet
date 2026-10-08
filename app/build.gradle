@@ -1,0 +1,34 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'ru.pivnoysovet.app'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'ru.pivnoysovet.app'
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+    signingConfigs {
+        home {
+            storeFile rootProject.file('pivnoysovet.keystore')
+            storePassword 'pivnoysovet'
+            keyAlias 'pivnoysovet'
+            keyPassword 'pivnoysovet'
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.home
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.home
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

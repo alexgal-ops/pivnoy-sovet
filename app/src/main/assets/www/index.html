@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Пивной совет</title>
+<style>
+@font-face{font-family:Manrope;font-weight:500;font-display:swap;src:url(fonts/manrope-cyrillic-500-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Manrope;font-weight:500;font-display:swap;src:url(fonts/manrope-latin-500-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+2000-206F,U+20AC,U+2212}
+@font-face{font-family:Manrope;font-weight:600;font-display:swap;src:url(fonts/manrope-cyrillic-600-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Manrope;font-weight:600;font-display:swap;src:url(fonts/manrope-latin-600-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+2000-206F,U+20AC,U+2212}
+@font-face{font-family:Manrope;font-weight:700;font-display:swap;src:url(fonts/manrope-cyrillic-700-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Manrope;font-weight:700;font-display:swap;src:url(fonts/manrope-latin-700-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+2000-206F,U+20AC,U+2212}
+@font-face{font-family:Manrope;font-weight:800;font-display:swap;src:url(fonts/manrope-cyrillic-800-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Manrope;font-weight:800;font-display:swap;src:url(fonts/manrope-latin-800-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+2000-206F,U+20AC,U+2212}
+@font-face{font-family:Unbounded;font-weight:600 800;font-display:swap;src:url(fonts/unbounded-cyrillic-700-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Unbounded;font-weight:600 800;font-display:swap;src:url(fonts/unbounded-latin-700-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+2000-206F,U+20AC,U+2212}
+
+/* Layout: one-column phone app (max 480px), sticky bottom tab bar, cards per question. Single dark "pub at night" look by choice. */
+:root{
+  --bg:#15100B; --surface:#221911; --surface-2:#2E2218; --line:#46341F;
+  --fg:#F6EBD6; --muted:#BCA88A; --dim:#7A6750; --amber:#F2A73B; --amber-ink:#1A1109; --foam:#FFF4DE;
+  --display:"Unbounded", "Arial Black", system-ui, sans-serif;
+  --body:"Manrope", "Segoe UI", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+img{max-width:100%;display:block}
+.app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 16px 12px;border-bottom:1px solid var(--surface-2)}
+.brand{font-family:var(--display);font-weight:800;font-size:20px;color:var(--amber);letter-spacing:-.2px}
+.sub{font-size:12px;color:var(--muted)}
+.me{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:3px 12px 3px 3px;min-height:44px}
+.me img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.me span{font-weight:700;font-size:13px}
+main{flex:1;padding:16px 16px 110px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:12px}
+h2{font-family:var(--display);font-weight:600;font-size:14px;margin:0;text-wrap:balance}
+.lbl{font-size:12px;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.chip{min-height:42px;padding:0 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface-2);font-weight:600;font-size:13px}
+.seg{min-height:44px;padding:0 10px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);font-weight:700;font-size:14px}
+.on{background:var(--amber);border-color:var(--amber);color:var(--amber-ink)}
+.who{display:flex;align-items:center;gap:8px;min-height:48px;padding:4px 8px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);font-weight:700;font-size:13px}
+.who img{width:30px;height:30px;border-radius:50%;object-fit:cover}
+.btn{min-height:48px;border-radius:12px;border:0;background:var(--amber);color:var(--amber-ink);font-weight:800;font-size:15px;padding:0 16px}
+.btn.ghost{background:var(--surface-2);color:var(--fg);border:1px solid var(--line)}
+.hero{position:relative;border-radius:20px;overflow:hidden}
+.hero img{width:100%;height:190px;object-fit:cover;object-position:center 30%}
+.hero .cap{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;background:rgba(15,10,6,.84);display:flex;flex-direction:column;gap:2px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--amber);font-weight:800}
+.big{font-family:var(--display);font-weight:600;font-size:19px;text-wrap:balance}
+.people{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center}
+.person{display:flex;flex-direction:column;align-items:center;gap:5px}
+.ava{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--line)}
+.ava.yes{border-color:var(--amber)}
+.ava.no{opacity:.45}
+.pill{font-size:12px;font-weight:800;padding:3px 10px;border-radius:99px;background:var(--surface-2);color:var(--fg)}
+.pill.yes{background:var(--amber);color:var(--amber-ink)}
+.pill.no{background:transparent;color:var(--dim);border:1px solid var(--line)}
+.meter{display:flex;align-items:flex-end;gap:6px;height:44px}
+.meter div{flex:1;border-radius:6px 6px 2px 2px;background:var(--surface-2)}
+.meter div.on{background:var(--amber)}
+nav{position:fixed;left:0;right:0;bottom:0;background:#100B07;border-top:1px solid var(--surface-2);padding:6px 8px calc(10px + env(safe-area-inset-bottom,0px))}
+nav .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+nav button{min-height:56px;border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700}
+nav button.act{color:var(--amber)}
+.cal-head{display:flex;align-items:center;justify-content:space-between}
+.iconbtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);display:flex;align-items:center;justify-content:center}
+.wd,.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.wd{font-size:11px;font-weight:700;color:var(--muted)}
+.day{height:46px;padding:0;border-radius:10px;border:1px solid transparent;background:transparent;font-weight:700;font-size:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-variant-numeric:tabular-nums}
+.day.past{color:var(--dim)}
+.day.has{background:var(--surface-2)}
+.day.today{border-color:var(--amber)}
+.day.sel{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
+.day.meet{box-shadow:inset 0 0 0 2px var(--foam)}
+.dot{width:6px;height:6px;border-radius:50%;background:transparent}
+.dot.p{background:var(--amber)}
+.day.sel .dot.p{background:var(--amber-ink)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:50%;display:inline-block}
+.plist{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid transparent;background:var(--surface);text-align:left;width:100%}
+.plist.sel{border-color:var(--amber)}
+.pday{width:48px;flex:none;text-align:center}
+.pday b{display:block;font-family:var(--display);font-size:20px;color:var(--amber)}
+.pday small{font-size:11px;color:var(--muted)}
+.grow{flex:1;min-width:0}
+.cnt{font-weight:800;font-size:13px;padding:4px 10px;border-radius:99px;background:var(--surface-2);font-variant-numeric:tabular-nums}
+.cnt.full{background:var(--amber);color:var(--amber-ink)}
+.scrollx{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.mchip{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 14px;min-height:44px;border-radius:14px;border:1px solid var(--line);background:var(--surface)}
+.mchip b{font-size:13px}.mchip span{font-size:12px}
+.stat{background:var(--surface-2);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.stat .n{font-family:var(--display);font-weight:800;font-size:28px;color:var(--amber);font-variant-numeric:tabular-nums}
+.stars{display:flex;gap:2px}
+.stars svg path{stroke:var(--amber);stroke-linejoin:round}
+.rate{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.starbtn{width:44px;height:44px;padding:0;border:0;background:none;display:flex;align-items:center;justify-content:center}
+.prow{display:flex;align-items:center;gap:12px}
+.prow img{width:40px;height:40px;border-radius:50%;object-fit:cover}
+.mini{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.mini>span{display:flex;align-items:center;gap:4px}
+.cm{display:flex;gap:10px;align-items:flex-start}
+.cm img{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:none}
+.bubble{background:var(--surface-2);border-radius:4px 14px 14px 14px;padding:8px 12px;min-width:0}
+.bubble b{font-size:12px;color:var(--amber)}
+.bubble p{margin:2px 0 0;font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+input[type=text]{flex:1;min-width:0;min-height:46px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-size:14px}
+.empty{font-size:14px;color:var(--muted);line-height:1.5}
+.note{font-size:13px;color:var(--muted);line-height:1.45}
+.banner{font-size:13px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--muted)}
+.pick{display:flex;flex-direction:column;gap:12px;padding:24px 0}
+.pick h1{font-family:var(--display);font-weight:800;font-size:26px;margin:0;text-wrap:balance}
+.pickbtn{display:flex;align-items:center;gap:14px;padding:12px;border-radius:18px;border:1px solid var(--line);background:var(--surface);text-align:left}
+.pickbtn img{width:64px;height:64px;border-radius:50%;object-fit:cover}
+.pickbtn b{font-family:var(--display);font-size:17px;font-weight:600}
+.pickbtn span{display:block;font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.chip,.seg,.who,.day,.btn{transition:background-color .15s,color .15s,border-color .15s}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header id="hdr"></header>
+  <main id="main"><p class="empty">Загружаю…</p></main>
+</div>
+<nav id="nav" hidden>
+  <div class="in">
+    <button type="button" data-act="tab" data-v="home" id="t-home">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h10v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M15 10h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><path d="M5 8a3 3 0 0 1 3-4 3 3 0 0 1 4 0 3 3 0 0 1 3 4"/><path d="M9 12v6M12 12v6"/></svg>
+      <span>Сходка</span>
+    </button>
+    <button type="button" data-act="tab" data-v="cal" id="t-cal">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.4" fill="currentColor"/></svg>
+      <span>Календарь</span>
+    </button>
+    <button type="button" data-act="tab" data-v="fb" id="t-fb">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6-4.9-4.6 6.6-.8z"/></svg>
+      <span>Фидбек</span>
+    </button>
+  </div>
+</nav>
+
+<script>
+(function(){
+var PEOPLE=[
+  {id:'sanya',name:'Саня',tag:'лысый стратег',img:'img/sanya.jpg'},
+  {id:'dima',name:'Диман',tag:'в панаме',img:'img/dima.jpg'},
+  {id:'tyoma',name:'Тёма',tag:'при исполнении',img:'img/tyoma.jpg'}
+];
+var GROUP='img/group.jpg';
+var PLACES={bar:'Бар',sanya:'У Сани',dima:'У Димана',tyoma:'У Тёмы',online:'Онлайн'};
+var WD=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+var WDF=['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+var MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+var MONN=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+var BEERS=['Лагер','Чешское','IPA','Стаут','Пшеничное','Сидр','Безалкогольное'];
+var FOOD=['Шаверма','Пицца','Суши','Бургеры','Крылья'];
+var STAR='M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6-4.9-4.6 6.6-.8z';
+var DEF={date:null,time:'19:00',mode:'offline',place:'bar',beerBy:null,snackBy:null,food:'no',foodWhat:'Шаверма',beers:[],politics:null,cards:null,walk:null,rsvp:{}};
+
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function person(id){for(var i=0;i<PEOPLE.length;i++)if(PEOPLE[i].id===id)return PEOPLE[i];return null}
+function pad(n){return n<10?'0'+n:''+n}
+function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function parse(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
+function nice(s){var d=parse(s);return WD[d.getDay()]+', '+d.getDate()+' '+MON[d.getMonth()]}
+function short(s){var d=parse(s);return d.getDate()+' '+MON[d.getMonth()].slice(0,3)}
+function isObj(o){return o&&typeof o==='object'&&!Array.isArray(o)}
+function merge(a,b){var o=Object.assign({},a);Object.keys(b).forEach(function(k){o[k]=isObj(b[k])&&isObj(a[k])?merge(a[k],b[k]):b[k]});return o}
+function nOf(votes){return Object.keys(votes||{}).filter(function(k){return votes[k]}).length}
+
+var S={
+  me:lsGet('beer.me'), tab:lsGet('beer.tab')||'home',
+  meet:Object.assign({},DEF), meetExists:false,
+  proposals:{}, meetups:{},
+  calMonth:null, selDate:null, newTime:'19:00', newPlace:'bar',
+  fbSel:null, draft:'', online:null, err:''
+};
+if(!person(S.me))S.me=null;
+var todayIso=iso(new Date());
+S.selDate=todayIso;
+S.calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+var db=null;
+
+/* ---------- writes ---------- */
+function fail(e){S.err='Не получилось сохранить. Проверь интернет и попробуй ещё раз.';render();console.log(e)}
+function saveMeet(patch){
+  S.meet=merge(S.meet,patch);render();
+  if(!db){persist();return;}
+  var ref=db.doc('meet/current');
+  (S.meetExists?ref.update(patch):ref.set(S.meet)).catch(fail);
+  S.meetExists=true;
+}
+function saveProposal(id,patch,create){
+  S.proposals[id]=create?patch:merge(S.proposals[id]||{},patch);render();
+  if(!db){persist();return;}
+  var ref=db.doc('proposals/'+id);
+  (create?ref.set(patch):ref.update(patch)).catch(fail);
+}
+function delProposal(id){delete S.proposals[id];render();if(db)db.doc('proposals/'+id).delete().catch(fail);else persist()}
+function saveMeetup(id,patch,create){
+  S.meetups[id]=create?patch:merge(S.meetups[id]||{},patch);render();
+  if(!db){persist();return;}
+  var ref=db.doc('meetups/'+id);
+  (create?ref.set(patch):ref.update(patch)).catch(fail);
+}
+function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+
+/* ---------- pieces ---------- */
+function chips(list,cur,act,cls){return list.map(function(o){var v=o[0],l=o[1];var on=Array.isArray(cur)?cur.indexOf(v)>=0:cur===v;return '<button type="button" class="'+(cls||'chip')+(on?' on':'')+'" data-act="'+act+'" data-v="'+esc(v)+'" aria-pressed="'+on+'">'+esc(l)+'</button>'}).join('')}
+function whoPick(key){return PEOPLE.map(function(p){var on=S.meet[key]===p.id;return '<button type="button" class="who'+(on?' on':'')+'" data-act="meetset" data-k="'+key+'" data-v="'+p.id+'" aria-pressed="'+on+'"><img src="'+p.img+'" alt=""><span>'+p.name+'</span></button>'}).join('')}
+function stars(v,size,act,k){var out='';for(var i=1;i<=5;i++){var svg='<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" aria-hidden="true"><path d="'+STAR+'" fill="'+(i<=v?'var(--amber)':'none')+'" stroke-width="1.7"/></svg>';out+=act?'<button type="button" class="starbtn" data-act="'+act+'" data-k="'+k+'" data-v="'+i+'" aria-label="'+i+' из 5">'+svg+'</button>':svg}return '<div class="stars">'+out+'</div>'}
+
+/* ---------- screens ---------- */
+function renderHeader(){
+  var h=document.getElementById('hdr');var p=person(S.me);
+  h.innerHTML='<div><div class="brand">Пивной совет</div><div class="sub">Саня · Диман · Тёма</div></div>'+
+   (p?'<button type="button" class="me" data-act="switch" aria-label="Сменить, кто ты"><img src="'+p.img+'" alt=""><span>'+p.name+'</span></button>':'');
+}
+function viewPick(){
+  return '<div class="pick"><h1>Кто ты?</h1><p class="note">Выбери себя один раз — телефон запомнит. Твои голоса и оценки пойдут от твоего имени.</p>'+
+   PEOPLE.map(function(p){return '<button type="button" class="pickbtn" data-act="iam" data-v="'+p.id+'"><img src="'+p.img+'" alt=""><div><b>'+p.name+'</b><span>'+p.tag+'</span></div></button>'}).join('')+'</div>';
+}
+function viewHome(){
+  var m=S.meet,me=S.me;
+  var title,subt;
+  if(m.date){title=nice(m.date)+' · '+m.time;
+    subt=m.mode==='online'?'Созвон, каждый со своим пивом':PLACES[m.place]+(m.beerBy?' · пиво — '+person(m.beerBy).name:'')+(m.snackBy?', закуски — '+person(m.snackBy).name:'');}
+  else{title='Сходка не назначена';subt='Предложите день в календаре';}
+  var st={yes:['Идёт','yes'],maybe:['Думает',''],no:['Пас','no']};
+  var people=PEOPLE.map(function(p){var r=(m.rsvp||{})[p.id];var s=st[r]||['Молчит','no'];return '<div class="person"><img class="ava '+(r==='yes'?'yes':r==='no'?'no':'')+'" src="'+p.img+'" alt=""><div style="font-weight:700;font-size:13px">'+p.name+'</div><div class="sub">'+p.tag+'</div><div class="pill '+s[1]+'">'+s[0]+'</div></div>'}).join('');
+  var h='';
+  h+='<div class="hero"><img src="'+GROUP+'" alt="Саня, Диман и Тёма с кружками"><div class="cap"><div class="eyebrow">Следующая сходка</div><div class="big">'+esc(title)+'</div><div style="font-size:13px;color:#DCCBB0">'+esc(subt)+'</div></div></div>';
+  if(!m.date)h+='<button type="button" class="btn" data-act="tab" data-v="cal">Выбрать день в календаре</button>';
+  h+='<section class="card"><h2>Кто идёт</h2><div class="people">'+people+'</div><div class="lbl">'+person(me).name+', ты идёшь?</div><div class="g3">'+chips([['yes','Иду'],['maybe','Думаю'],['no','Пас']],(m.rsvp||{})[me],'rsvp','seg')+'</div></section>';
+  h+='<section class="card"><h2>Когда</h2><div class="lbl">'+(m.date?esc(nice(m.date))+' · меняется в календаре':'Дата — через календарь')+'</div><div class="lbl">Во сколько</div><div class="row">'+chips([['17:00','17:00'],['18:00','18:00'],['19:00','19:00'],['20:00','20:00'],['21:00','21:00']],m.time,'time')+'</div></section>';
+  h+='<section class="card"><h2>Формат</h2><div class="g2">'+chips([['offline','Оффлайн'],['online','Онлайн']],m.mode,'mode','seg')+'</div>'+
+    (m.mode==='offline'?'<div class="lbl">Где сидим</div><div class="row">'+chips([['bar','Бар'],['sanya','У Сани'],['dima','У Димана'],['tyoma','У Тёмы']],m.place,'place')+'</div>':'<p class="note" style="margin:0">Созвон: каждый со своей кружкой, ссылку кидаем в чат за 10 минут до старта.</p>')+'</section>';
+  if(m.mode==='offline')h+='<section class="card"><h2>Кто что берёт</h2><div class="lbl">Пиво несёт</div><div class="g3">'+whoPick('beerBy')+'</div><div class="lbl">Закуски несёт</div><div class="g3">'+whoPick('snackBy')+'</div></section>';
+  h+='<section class="card"><h2>Еду заказываем?</h2><div class="g2">'+chips([['yes','Заказываем'],['no','Не, без еды']],m.food,'food','seg')+'</div>'+
+    (m.food==='yes'?'<div class="row">'+chips(FOOD.map(function(f){return[f,f]}),m.foodWhat,'foodWhat')+'</div>':'')+'</section>';
+  h+='<section class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h2>Что пьём</h2><span class="lbl">можно несколько</span></div><div class="row">'+chips(BEERS.map(function(b){return[b,b]}),m.beers||[],'beer')+'</div></section>';
+  var POL=[['p1','После 1-й'],['p2','После 2-й'],['p3','После 3-й'],['never','Никогда (ага)']];
+  var pi=-1;POL.forEach(function(p,i){if(p[0]===m.politics)pi=i});
+  h+='<section class="card"><h2>Когда начнём за политику</h2><div class="meter" aria-hidden="true">'+[12,22,32,44].map(function(x,i){return '<div class="'+(i===pi?'on':'')+'" style="height:'+x+'px"></div>'}).join('')+'</div><div class="g2">'+chips(POL,m.politics,'politics','seg')+'</div></section>';
+  h+='<div class="g2"><section class="card"><h2>Карты берём?</h2>'+chips([['yes','Берём'],['no','Без карт']],m.cards,'cards','seg')+'</section><section class="card"><h2>Гуляем дальше?</h2>'+chips([['yes','Гуляем'],['maybe','Посмотрим'],['no','По домам']],m.walk,'walk','seg')+'</section></div>';
+  if(m.date&&m.date<=todayIso)h+='<section class="card"><h2>Сходка прошла?</h2><p class="note" style="margin:0">Перенесём её в «Фидбек», чтобы все поставили звёзды, а здесь освободим место под следующую.</p><button type="button" class="btn" data-act="close">Сходка прошла — оценить</button></section>';
+  return h;
+}
+function propsOn(date){return Object.keys(S.proposals).filter(function(id){return S.proposals[id].date===date}).map(function(id){return Object.assign({id:id},S.proposals[id])})}
+function viewCal(){
+  var mo=S.calMonth,y=mo.getFullYear(),mm=mo.getMonth();
+  var lead=(new Date(y,mm,1).getDay()+6)%7, days=new Date(y,mm+1,0).getDate();
+  var meetupDates={};Object.keys(S.meetups).forEach(function(k){meetupDates[S.meetups[k].date]=1});
+  var cells='';
+  for(var b=0;b<lead;b++)cells+='<div></div>';
+  for(var d=1;d<=days;d++){
+    var ds=y+'-'+pad(mm+1)+'-'+pad(d);var has=propsOn(ds).length>0;
+    var cls='day'+(ds<todayIso?' past':'')+(has?' has':'')+(ds===todayIso?' today':'')+(ds===S.selDate?' sel':'')+(ds===S.meet.date?' meet':'');
+    cells+='<button type="button" class="'+cls+'" data-act="day" data-v="'+ds+'" aria-label="'+d+' '+MON[mm]+(has?', есть предложение':'')+(ds===S.meet.date?', назначена сходка':'')+'"><span>'+d+'</span><span class="dot'+(has?' p':'')+'"></span></button>';
+  }
+  var h='<section class="card"><div class="cal-head"><button type="button" class="iconbtn" data-act="mon" data-v="-1" aria-label="Прошлый месяц"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><h2 style="font-size:16px">'+MONN[mm]+' '+y+'</h2><button type="button" class="iconbtn" data-act="mon" data-v="1" aria-label="Следующий месяц"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></div>'+
+    '<div class="wd"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div><div class="grid">'+cells+'</div>'+
+    '<div class="legend"><span><i class="sw" style="background:var(--amber)"></i>предложение</span><span><i class="sw" style="box-shadow:inset 0 0 0 2px var(--foam)"></i>назначенная сходка</span></div></section>';
+  // selected day
+  var sd=S.selDate, ps=propsOn(sd), past=sd<todayIso;
+  h+='<section class="card"><h2 style="font-size:15px">'+WDF[parse(sd).getDay()]+', '+parse(sd).getDate()+' '+MON[parse(sd).getMonth()]+(sd===todayIso?' (сегодня)':'')+'</h2>';
+  if(sd===S.meet.date)h+='<div class="pill yes" style="align-self:flex-start">На этот день назначена сходка, '+esc(S.meet.time)+'</div>';
+  ps.forEach(function(p){
+    var n=nOf(p.votes),mine=!!(p.votes||{})[S.me];
+    h+='<div style="display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--surface-2);padding-top:12px"><div><div style="font-weight:700">'+esc(p.time)+' · '+esc(PLACES[p.place]||p.place)+'</div><div class="sub">Предложил: '+esc((person(p.by)||{}).name||'кто-то')+'</div></div>'+
+      '<div class="people">'+PEOPLE.map(function(x){var v=!!(p.votes||{})[x.id];return '<div class="person"><img class="ava '+(v?'yes':'no')+'" style="width:44px;height:44px" src="'+x.img+'" alt=""><div style="font-size:12px;font-weight:700;color:'+(v?'var(--amber)':'var(--muted)')+'">'+x.name+(v?' в деле':' ?')+'</div></div>'}).join('')+'</div>'+
+      (past?'':'<div class="row"><button type="button" class="btn'+(mine?' ghost':'')+'" style="flex:1" data-act="vote" data-v="'+p.id+'">'+(mine?'Я пас в этот раз':'Я в деле')+'</button>'+(n===3&&S.meet.date!==p.date?'<button type="button" class="btn ghost" style="flex:1;border-color:var(--foam)" data-act="assign" data-v="'+p.id+'">Назначить сходку</button>':'')+'</div>')+
+      (p.by===S.me?'<button type="button" class="chip" style="align-self:flex-start" data-act="delprop" data-v="'+p.id+'">Убрать предложение</button>':'')+'</div>';
+  });
+  if(past&&!ps.length)h+='<p class="note" style="margin:0">Этот день уже прошёл.</p>';
+  if(!past){
+    h+='<div style="display:flex;flex-direction:column;gap:10px;'+(ps.length?'border-top:1px solid var(--surface-2);padding-top:12px':'')+'">'+(ps.length?'<div class="lbl">Предложить другой вариант на этот день</div>':'')+
+      '<div class="lbl">Во сколько</div><div class="row">'+chips([['18:00','18:00'],['19:00','19:00'],['20:00','20:00'],['21:00','21:00']],S.newTime,'ntime')+'</div>'+
+      '<div class="lbl">Где</div><div class="row">'+chips(Object.keys(PLACES).map(function(k){return[k,PLACES[k]]}),S.newPlace,'nplace')+'</div>'+
+      '<button type="button" class="btn" data-act="propose">Предложить попить пива</button></div>';
+  }
+  h+='</section>';
+  // list
+  var up=Object.keys(S.proposals).map(function(id){return Object.assign({id:id},S.proposals[id])}).filter(function(p){return p.date>=todayIso}).sort(function(a,b){return (a.date+a.time)<(b.date+b.time)?-1:1});
+  h+='<h2 style="padding:0 4px">Все предложения</h2>';
+  if(!up.length)h+='<p class="empty" style="margin:0 4px">Пока пусто. Выбери день выше и предложи — пацаны увидят и проголосуют.</p>';
+  up.forEach(function(p){var n=nOf(p.votes);var d=parse(p.date);
+    h+='<button type="button" class="plist'+(p.date===S.selDate?' sel':'')+'" data-act="day" data-v="'+p.date+'"><div class="pday"><b>'+d.getDate()+'</b><small>'+WD[d.getDay()]+', '+MON[d.getMonth()].slice(0,3)+'</small></div><div class="grow"><div style="font-weight:700">'+esc(p.time)+' · '+esc(PLACES[p.place]||p.place)+'</div><div class="sub">от: '+esc((person(p.by)||{}).name||'кто-то')+'</div></div><div class="cnt'+(n===3?' full':'')+'">'+n+'/3</div></button>'});
+  return h;
+}
+function viewFb(){
+  var list=Object.keys(S.meetups).map(function(id){return Object.assign({id:id},S.meetups[id])}).sort(function(a,b){return a.date<b.date?1:-1});
+  if(!list.length)return '<section class="card"><h2>Фидбек</h2><p class="empty" style="margin:0">Оценивать пока нечего. Когда сходка пройдёт, нажмите на главной «Сходка прошла — оценить», и она появится здесь.</p></section>';
+  if(!S.fbSel||!S.meetups[S.fbSel])S.fbSel=list[0].id;
+  var mu=S.meetups[S.fbSel],R=mu.ratings||{};
+  var avg=function(k){var s=0,n=0;Object.keys(R).forEach(function(p){var v=(R[p]||{})[k];if(v){s+=v;n++}});return n?s/n:0};
+  var aB=avg('beer'),aM=avg('meet'),mine=R[S.me]||{};
+  var h='<div class="scrollx">'+list.map(function(x){var on=x.id===S.fbSel;return '<button type="button" class="mchip'+(on?' on':'')+'" data-act="fbsel" data-v="'+x.id+'"><b>'+esc(short(x.date))+'</b><span>'+esc(x.title)+'</span></button>'}).join('')+'</div>';
+  h+='<section class="card"><div><div class="big" style="font-size:17px">'+esc(mu.title)+'</div><div class="sub" style="font-size:13px">'+esc(nice(mu.date))+(mu.beer?' · пили: '+esc(mu.beer):'')+'</div></div>'+
+    '<div class="g2"><div class="stat"><div class="lbl">Пивко, в среднем</div><div class="n">'+(aB?aB.toFixed(1):'—')+'</div>'+stars(Math.round(aB),16)+'</div><div class="stat"><div class="lbl">Встреча, в среднем</div><div class="n" style="color:var(--foam)">'+(aM?aM.toFixed(1):'—')+'</div>'+stars(Math.round(aM),16)+'</div></div></section>';
+  h+='<section class="card"><h2>Оценка от '+person(S.me).name+'</h2><div class="rate"><b>Пивко</b>'+stars(mine.beer||0,30,'rate','beer')+'</div><div class="rate"><b>Встреча</b>'+stars(mine.meet||0,30,'rate','meet')+'</div></section>';
+  h+='<section class="card"><h2>Оценки всех</h2>'+PEOPLE.map(function(p){var r=R[p.id];var ok=r&&(r.beer||r.meet);return '<div class="prow"><img src="'+p.img+'" alt=""><div class="grow"><div style="font-weight:700">'+p.name+'</div>'+(ok?'<div class="mini"><span>пиво '+stars(r.beer||0,12)+'</span><span>встреча '+stars(r.meet||0,12)+'</span></div>':'<div class="sub">ещё не оценил</div>')+'</div></div>'}).join('')+'</section>';
+  var cms=(mu.comments||[]);
+  h+='<section class="card"><h2>Как оно было</h2>'+(cms.length?cms.map(function(c){var p=person(c.by)||{name:'?',img:''};return '<div class="cm"><img src="'+p.img+'" alt=""><div class="bubble"><b>'+esc(p.name)+'</b><p>'+esc(c.text)+'</p></div></div>'}).join(''):'<p class="note" style="margin:0">Комментов пока нет.</p>')+
+    '<form id="cform" style="display:flex;flex-direction:column;gap:6px"><label for="cmt" class="lbl">Твой комментарий</label><div style="display:flex;gap:8px"><input id="cmt" type="text" maxlength="300" autocomplete="off" placeholder="Пиво огонь, политика на второй…" value="'+esc(S.draft)+'"><button type="submit" class="btn">Отпр.</button></div></form></section>';
+  return h;
+}
+function render(){
+  var hadFocus=document.activeElement&&document.activeElement.id==='cmt';
+  renderHeader();
+  var main=document.getElementById('main'),nav=document.getElementById('nav');
+  var h='';
+  if(S.err)h+='<div class="banner" role="status">'+esc(S.err)+'</div>';
+  if(S.online===false)h+='<div class="banner">Общая база сейчас недоступна — изменения видишь только ты и они не сохранятся.</div>';
+  if(!S.me){main.innerHTML=h+viewPick();nav.hidden=true;return}
+  nav.hidden=false;
+  ['home','cal','fb'].forEach(function(t){document.getElementById('t-'+t).className=S.tab===t?'act':''});
+  h+=S.tab==='cal'?viewCal():S.tab==='fb'?viewFb():viewHome();
+  main.innerHTML=h;
+  if(hadFocus){var i=document.getElementById('cmt');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var a=b.getAttribute('data-act'),v=b.getAttribute('data-v'),k=b.getAttribute('data-k');
+  S.err='';
+  var m=S.meet;
+  switch(a){
+    case 'iam':S.me=v;lsSet('beer.me',v);render();window.scrollTo(0,0);break;
+    case 'switch':S.me=null;render();break;
+    case 'tab':S.tab=v;lsSet('beer.tab',v);render();window.scrollTo(0,0);break;
+    case 'rsvp':var r={};r[S.me]=v;saveMeet({rsvp:r});break;
+    case 'time':saveMeet({time:v});break;
+    case 'mode':saveMeet({mode:v});break;
+    case 'place':saveMeet({place:v});break;
+    case 'meetset':var o={};o[k]=m[k]===v?null:v;saveMeet(o);break;
+    case 'food':saveMeet({food:v});break;
+    case 'foodWhat':saveMeet({foodWhat:v});break;
+    case 'beer':var l=(m.beers||[]).slice();var i=l.indexOf(v);if(i>=0)l.splice(i,1);else l.push(v);saveMeet({beers:l});break;
+    case 'politics':saveMeet({politics:v});break;
+    case 'cards':saveMeet({cards:v});break;
+    case 'walk':saveMeet({walk:v});break;
+    case 'mon':S.calMonth=new Date(S.calMonth.getFullYear(),S.calMonth.getMonth()+(+v),1);render();break;
+    case 'day':S.selDate=v;var d=parse(v);S.calMonth=new Date(d.getFullYear(),d.getMonth(),1);render();break;
+    case 'ntime':S.newTime=v;render();break;
+    case 'nplace':S.newPlace=v;render();break;
+    case 'propose':var vo={};vo[S.me]=true;saveProposal(newId(),{date:S.selDate,time:S.newTime,place:S.newPlace,by:S.me,votes:vo,at:Date.now()},true);break;
+    case 'vote':var p=S.proposals[v];if(!p)break;var vv={};vv[S.me]=!(p.votes||{})[S.me];saveProposal(v,{votes:vv});break;
+    case 'delprop':delProposal(v);break;
+    case 'assign':var pp=S.proposals[v];if(!pp)break;var patch={date:pp.date,time:pp.time,mode:pp.place==='online'?'online':'offline',rsvp:{sanya:'yes',dima:'yes',tyoma:'yes'}};if(pp.place!=='online')patch.place=pp.place;saveMeet(patch);S.tab='home';lsSet('beer.tab','home');render();window.scrollTo(0,0);break;
+    case 'close':
+      var id=newId();
+      var title=m.mode==='online'?'Онлайн':PLACES[m.place];
+      saveMeetup(id,{date:m.date,time:m.time,title:title,beer:(m.beers||[]).join(', '),ratings:{},comments:[],at:Date.now()},true);
+      saveMeet({date:null,rsvp:{sanya:null,dima:null,tyoma:null},beerBy:null,snackBy:null,politics:null,cards:null,walk:null});
+      S.fbSel=id;S.tab='fb';lsSet('beer.tab','fb');render();window.scrollTo(0,0);break;
+    case 'fbsel':S.fbSel=v;S.draft='';render();break;
+    case 'rate':var rr={};rr[S.me]={};rr[S.me][k]=+v;saveMeetup(S.fbSel,{ratings:rr});break;
+  }
+});
+document.addEventListener('input',function(e){if(e.target.id==='cmt')S.draft=e.target.value});
+document.addEventListener('submit',function(e){
+  if(e.target.id!=='cform')return;e.preventDefault();
+  var t=(S.draft||'').trim();if(!t||!S.fbSel)return;
+  var mu=S.meetups[S.fbSel];var c=(mu.comments||[]).concat([{by:S.me,text:t,at:Date.now()}]);
+  S.draft='';saveMeetup(S.fbSel,{comments:c});
+});
+
+try{var saved=JSON.parse(lsGet('beer.data')||'null');if(saved){S.meet=merge(DEF,saved.meet||{});S.proposals=saved.proposals||{};S.meetups=saved.meetups||{};S.meetExists=true}}catch(e){}
+render();
+
+/* ---------- storage on this phone ---------- */
+function persist(){lsSet('beer.data',JSON.stringify({meet:S.meet,proposals:S.proposals,meetups:S.meetups}))}
+window.appBack=function(){
+  if(S.me&&S.tab!=='home'){S.tab='home';lsSet('beer.tab','home');render();window.scrollTo(0,0);return true}
+  return false;
+};
+})();
+</script>
+</body>
+</html>
