@@ -517,12 +517,13 @@ if(cfg.url&&cfg.key&&window.supabase){
   db=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:false,autoRefreshToken:false}});
   var pull=function(){
     return db.from('docs').select('id,data').then(function(r){
-      if(r.error){S.online=false;render();return}
-      S.online=true;Object.keys(COLL).forEach(function(c){S[c]={}});
+      if(r.error){if(++pullFails>=2){S.online=false;render()}return}
+      pullFails=0;S.online=true;Object.keys(COLL).forEach(function(c){S[c]={}});
       (r.data||[]).forEach(function(row){applyRow(row.id,row.data)});
       persist();render();
-    },function(){S.online=false;render()});
+    },function(){if(++pullFails>=2){S.online=false;render()}});
   };
+  var pullFails=0;
   pull();
   db.channel('docs-live').on('postgres_changes',{event:'*',schema:'public',table:'docs'},function(p){
     if(p.eventType==='DELETE'){if(p.old&&p.old.id)dropRow(p.old.id)}
