@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Пивной совет</title>
+<meta name="theme-color" content="#15100B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Пивной совет">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
 <style>
 @font-face{font-family:Manrope;font-weight:500;font-display:swap;src:url(fonts/manrope-cyrillic-500-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
 @font-face{font-family:Manrope;font-weight:500;font-display:swap;src:url(fonts/manrope-latin-500-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+2000-206F,U+20AC,U+2212}
@@ -31,7 +39,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 img{max-width:100%;display:block}
 .app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 16px 12px;border-bottom:1px solid var(--surface-2)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(16px + env(safe-area-inset-top,0px)) 16px 12px;border-bottom:1px solid var(--surface-2)}
 .brand{font-family:var(--display);font-weight:800;font-size:20px;color:var(--amber);letter-spacing:-.2px}
 .sub{font-size:12px;color:var(--muted)}
 .me{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:3px 12px 3px 3px;min-height:44px}
@@ -148,6 +156,8 @@ input[type=text]{flex:1;min-width:0;min-height:46px;padding:0 12px;border-radius
   </div>
 </nav>
 
+<script src="lib/supabase.js"></script>
+<script src="config.js"></script>
 <script>
 (function(){
 var PEOPLE=[
@@ -193,24 +203,24 @@ S.calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 var db=null;
 
 /* ---------- writes ---------- */
-function fail(e){S.err='Не получилось сохранить. Проверь интернет и попробуй ещё раз.';render();console.log(e)}
+function fail(e){S.err='Не получилось отправить в общую базу. Проверь интернет и повтори.';render();console.log(e)}
 function saveMeet(patch){
   S.meet=merge(S.meet,patch);render();
-  if(!db){persist();return;}
+  persist();if(!db)return;
   var ref=db.doc('meet/current');
   (S.meetExists?ref.update(patch):ref.set(S.meet)).catch(fail);
   S.meetExists=true;
 }
 function saveProposal(id,patch,create){
   S.proposals[id]=create?patch:merge(S.proposals[id]||{},patch);render();
-  if(!db){persist();return;}
+  persist();if(!db)return;
   var ref=db.doc('proposals/'+id);
   (create?ref.set(patch):ref.update(patch)).catch(fail);
 }
-function delProposal(id){delete S.proposals[id];render();if(db)db.doc('proposals/'+id).delete().catch(fail);else persist()}
+function delProposal(id){delete S.proposals[id];render();persist();if(db)db.doc('proposals/'+id).delete().catch(fail)}
 function saveMeetup(id,patch,create){
   S.meetups[id]=create?patch:merge(S.meetups[id]||{},patch);render();
-  if(!db){persist();return;}
+  persist();if(!db)return;
   var ref=db.doc('meetups/'+id);
   (create?ref.set(patch):ref.update(patch)).catch(fail);
 }
@@ -322,7 +332,7 @@ function render(){
   var main=document.getElementById('main'),nav=document.getElementById('nav');
   var h='';
   if(S.err)h+='<div class="banner" role="status">'+esc(S.err)+'</div>';
-  if(S.online===false)h+='<div class="banner">Общая база сейчас недоступна — изменения видишь только ты и они не сохранятся.</div>';
+  if(S.online===false)h+='<div class="banner">Нет связи с общей базой. Проверь интернет: как связь появится, данные обновятся сами.</div>';
   if(!S.me){main.innerHTML=h+viewPick();nav.hidden=true;return}
   nav.hidden=false;
   ['home','cal','fb'].forEach(function(t){document.getElementById('t-'+t).className=S.tab===t?'act':''});
@@ -381,8 +391,44 @@ document.addEventListener('submit',function(e){
 try{var saved=JSON.parse(lsGet('beer.data')||'null');if(saved){S.meet=merge(DEF,saved.meet||{});S.proposals=saved.proposals||{};S.meetups=saved.meetups||{};S.meetExists=true}}catch(e){}
 render();
 
-/* ---------- storage on this phone ---------- */
+/* ---------- storage: phone cache + shared Supabase base ---------- */
 function persist(){lsSet('beer.data',JSON.stringify({meet:S.meet,proposals:S.proposals,meetups:S.meetups}))}
+function localDoc(path){var i=path.indexOf('/'),c=path.slice(0,i),k=path.slice(i+1);
+  if(c==='meet')return S.meet; if(c==='proposals')return S.proposals[k]; if(c==='meetups')return S.meetups[k]; return null}
+function chk(r){if(r&&r.error)throw r.error;S.online=true}
+function applyRow(id,data){var i=id.indexOf('/'),c=id.slice(0,i),k=id.slice(i+1);
+  if(c==='meet'){S.meet=merge(DEF,data||{});S.meetExists=true}
+  else if(c==='proposals')S.proposals[k]=data;
+  else if(c==='meetups')S.meetups[k]=data}
+function dropRow(id){var i=id.indexOf('/'),c=id.slice(0,i),k=id.slice(i+1);
+  if(c==='proposals')delete S.proposals[k];else if(c==='meetups')delete S.meetups[k]}
+var cfg=window.BEER_CFG||{};
+if(cfg.url&&cfg.key&&window.supabase){
+  var sb=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:false,autoRefreshToken:false}});
+  var up=function(path,data){return sb.from('docs').upsert({id:path,data:data,updated_at:new Date().toISOString()}).then(chk)};
+  db={doc:function(path){return{
+    set:function(d){return up(path,d)},
+    update:function(){return up(path,localDoc(path))},
+    delete:function(){return sb.from('docs').delete().eq('id',path).then(chk)}
+  }}};
+  var pull=function(){
+    return sb.from('docs').select('id,data').then(function(r){
+      if(r.error){S.online=false;render();return}
+      S.online=true;S.proposals={};S.meetups={};var hasMeet=false;
+      (r.data||[]).forEach(function(row){applyRow(row.id,row.data);if(row.id==='meet/current')hasMeet=true});
+      if(!hasMeet){S.meet=Object.assign({},DEF);S.meetExists=false}
+      persist();render();
+    },function(){S.online=false;render()});
+  };
+  pull();
+  sb.channel('docs-live').on('postgres_changes',{event:'*',schema:'public',table:'docs'},function(p){
+    if(p.eventType==='DELETE'){if(p.old&&p.old.id)dropRow(p.old.id)}
+    else if(p.new&&p.new.id)applyRow(p.new.id,p.new.data);
+    persist();render();
+  }).subscribe();
+  setInterval(pull,30000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)pull()});
+}
 window.appBack=function(){
   if(S.me&&S.tab!=='home'){S.tab='home';lsSet('beer.tab','home');render();window.scrollTo(0,0);return true}
   return false;
