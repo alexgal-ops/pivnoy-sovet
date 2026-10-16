@@ -2,6 +2,9 @@ package ru.pivnoysovet.app;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.JavascriptInterface;
@@ -27,6 +30,24 @@ public class MainActivity extends Activity {
             Intent chooser = Intent.createChooser(send, "Отправить приглашение");
             chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(chooser);
+        }
+
+        /** The page tells the app who is using it, so background checks know whose news to show. */
+        @JavascriptInterface
+        public void setMe(String id) {
+            SharedPreferences sp = getSharedPreferences(PollJob.PREFS, MODE_PRIVATE);
+            if (!id.equals(sp.getString("me", ""))) sp.edit().putString("me", id).putLong("since", System.currentTimeMillis()).apply();
+        }
+
+        @JavascriptInterface
+        public void setConfig(String url, String key) {
+            getSharedPreferences(PollJob.PREFS, MODE_PRIVATE).edit().putString("url", url).putString("key", key).apply();
+        }
+
+        @JavascriptInterface
+        public boolean notificationsAllowed() {
+            if (Build.VERSION.SDK_INT >= 33) return checkSelfPermission("android.permission.POST_NOTIFICATIONS") == PackageManager.PERMISSION_GRANTED;
+            return true;
         }
     }
 
@@ -67,6 +88,10 @@ public class MainActivity extends Activity {
             }
         });
         setContentView(web);
+        PollJob.ensureChannel(this);
+        PollJob.schedule(this);
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED)
+            requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 12);
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
         } else {

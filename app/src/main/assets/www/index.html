@@ -252,7 +252,7 @@ var todayIso=iso(new Date());
 var S={
   me:lsGet('beer.me'), tab:lsGet('beer.tab')||'home',
   proposals:{}, answers:{}, ratings:{}, comments:{}, homes:{}, members:{}, invites:{},
-  loaded:false, join:null, joinForm:null,
+  loaded:false, join:null, joinForm:null, push:'unknown', pushBusy:false,
   sheet:null, calMonth:null, selDate:todayIso, fbSel:null, draft:'',
   online:null, err:'', askSwitch:false
 };
@@ -305,7 +305,7 @@ function opts(list,cur,act,k){return list.map(function(o){var v=Array.isArray(o)
 function stack(ids){return '<span class="stack">'+ids.map(function(id){return '<img src="'+person(id).img+'" alt="'+esc(person(id).name)+'">'}).join('')+'</span>'}
 function stars(v,size,act,k){var o='';for(var i=1;i<=5;i++){var svg='<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" aria-hidden="true"><path d="'+STAR+'" fill="'+(i<=v?'#F2A73B':'none')+'" stroke="#F2A73B" stroke-width="1.7" stroke-linejoin="round"/></svg>';o+=act?'<button type="button" class="starbtn" data-act="'+act+'" data-k="'+k+'" data-v="'+i+'" aria-label="'+i+' из 5">'+svg+'</button>':svg}return '<div class="stars">'+o+'</div>'}
 function whereBlock(p){var u=mapUrl(p.place);return '<div class="where"><b>'+esc(placeTitle(p.place))+'</b><span>'+esc(placeAddr(p.place))+'</span>'+(u?' <a class="maplink" href="'+u+'" target="_blank" rel="noopener">на карте</a>':'')+'</div>'}
-function peopleRow(p){var i=info(p);return '<div class="people">'+PEOPLE.map(function(x){var a=ans(p.id,x.id);var cls=a&&a.in===true?'in':a&&a.in===false?'out':'';var st=a&&a.in===true?'в теме':a&&a.in===false?'пас':'молчит';var pl=a&&a.in&&a.plus?'<span class="plus">+'+a.plus+'</span>':'';
+function peopleRow(p){var i=info(p);return '<div class="people">'+PEOPLE.map(function(x){var a=ans(p.id,x.id);var cls=a&&a.in===true?'in':a&&a.in===false?'out':'';var st=a&&a.in===true?'в пиве':a&&a.in===false?'пас':'молчит';var pl=a&&a.in&&a.plus?'<span class="plus">+'+a.plus+'</span>':'';
   return '<div class="person"><img class="ava '+cls+'" src="'+x.img+'" alt="">'+pl+'<div style="font-weight:600;font-size:13px">'+x.name+'</div><div class="st '+cls+'">'+st+'</div></div>'}).join('')+'</div>'}
 function aggregate(p){
   var rows=[];
@@ -347,17 +347,17 @@ function inviteCard(p){
   var by=person(p.by);
   return '<section class="card invite"><div class="who"><img src="'+by.img+'" alt=""><div><div style="font-weight:700">'+esc(by.name)+' предложил сходку</div><div class="lbl">какой твой ответ, май френд?</div></div></div>'+
     '<div class="when">'+esc(nice(p.date))+' · '+esc(p.time)+'</div>'+whereBlock(p)+
-    '<div class="g2"><button type="button" class="btn" data-act="join" data-v="'+p.id+'">Я в теме</button><button type="button" class="btn ghost" data-act="pass" data-v="'+p.id+'">Пас</button></div></section>';
+    '<div class="g2"><button type="button" class="btn" data-act="join" data-v="'+p.id+'">Я в пиве</button><button type="button" class="btn ghost" data-act="pass" data-v="'+p.id+'">Пас</button></div></section>';
 }
 function meetCard(p,big){
   var i=info(p),mine=ans(p.id,S.me);
-  var h='<section class="card">'+(i.confirmed?'<span class="status ok">Сходка в силе · '+i.inn.length+' в теме</span>':'<span class="status">Собираемся · '+i.inn.length+' из '+PEOPLE.length+' в теме</span>')+
+  var h='<section class="card">'+(i.confirmed?'<span class="status ok">Сходка в силе · '+i.inn.length+' в пиве</span>':'<span class="status">Собираемся · '+i.inn.length+' из '+PEOPLE.length+' в пиве</span>')+
     '<div class="when">'+esc(nice(p.date))+' · '+esc(p.time)+'</div>'+whereBlock(p)+peopleRow(p);
   if(i.confirmed||big)h+='<div class="divider"></div>'+aggregate(p);
   if(mine&&mine.in===true)h+='<button type="button" class="btn ghost wide" data-act="edit" data-v="'+p.id+'">Изменить мой выбор</button>';
-  else if(mine&&mine.in===false)h+='<div class="switchbar"><span class="lbl">Ты пас.</span><button type="button" class="btn ghost" data-act="join" data-v="'+p.id+'">Передумал — я в теме</button></div>';
-  else if(p.by!==S.me)h+='<div class="g2"><button type="button" class="btn" data-act="join" data-v="'+p.id+'">Я в теме</button><button type="button" class="btn ghost" data-act="pass" data-v="'+p.id+'">Пас</button></div>';
-  if(p.by===S.me&&!i.confirmed)h+='<button type="button" class="btn wide" data-act="lock" data-v="'+p.id+'"'+(i.inn.length<2?' disabled':'')+'>'+(i.inn.length<2?'Сходка в силе — ждём хотя бы одного':'Сходка в силе — '+i.inn.length+' в теме')+'</button>';
+  else if(mine&&mine.in===false)h+='<div class="switchbar"><span class="lbl">Ты пас.</span><button type="button" class="btn ghost" data-act="join" data-v="'+p.id+'">Передумал — я в пиве</button></div>';
+  else if(p.by!==S.me)h+='<div class="g2"><button type="button" class="btn" data-act="join" data-v="'+p.id+'">Я в пиве</button><button type="button" class="btn ghost" data-act="pass" data-v="'+p.id+'">Пас</button></div>';
+  if(p.by===S.me&&!i.confirmed)h+='<button type="button" class="btn wide" data-act="lock" data-v="'+p.id+'"'+(i.inn.length<2?' disabled':'')+'>'+(i.inn.length<2?'Сходка в силе — ждём хотя бы одного':'Сходка в силе — '+i.inn.length+' в пиве')+'</button>';
   if(p.by===S.me)h+='<button type="button" class="linkbtn" data-act="delprop" data-v="'+p.id+'">'+(i.confirmed?'Отменить сходку':'Отменить предложение')+'</button>';
   return h+'</section>';
 }
@@ -371,6 +371,7 @@ function viewHome(){
   conf.forEach(function(p){h+=meetCard(p,true)});
   wait.forEach(function(p){h+=meetCard(p,false)});
   unr.forEach(function(p){h+='<section class="card"><h2>Как посидели '+esc(short(p.date))+'?</h2><p class="note">'+esc(placeTitle(p.place))+'. Поставь звёзды пиву и встрече.</p><button type="button" class="btn ghost wide" data-act="rate-go" data-v="'+p.id+'">Оценить</button></section>'});
+  if((S.push==='off'||S.push==='need-install')&&lsGet('beer.pushnudge')!=='no')h+='<section class="card"><h2>Не пропусти сходку</h2><p class="note">'+(S.push==='need-install'?'Чтобы приходили уведомления на айфон, добавь приложение на экран «Домой»: «Поделиться» → «На экран „Домой“», и открывай его оттуда.':'Включи уведомления — узнаешь, когда кто-то предложит сходку или ответит.')+'</p><div class="row">'+(S.push==='off'?'<button type="button" class="btn" data-act="push-on">Включить уведомления</button>':'')+'<button type="button" class="btn ghost" data-act="push-nudge-off">Не сейчас</button></div></section>';
   var busy=inv.length+conf.length+wait.length;
   h+='<button type="button" class="btn wide'+(busy?' ghost':'')+'" data-act="new">'+(busy?'Предложить ещё сходку':'Предложить сходку')+'</button>';
   return h;
@@ -394,7 +395,7 @@ function viewCal(){
 }
 function viewFb(){
   var list=pastConfirmed();
-  if(!list.length)return '<section class="card"><h2>Фидбек</h2><p class="note">Здесь появятся сходки, на которых все были в теме, — в день сходки и после. Сейчас оценивать нечего.</p><button type="button" class="btn wide" data-act="new">Предложить сходку</button></section>';
+  if(!list.length)return '<section class="card"><h2>Фидбек</h2><p class="note">Здесь появятся сходки, на которых все были в пиве, — в день сходки и после. Сейчас оценивать нечего.</p><button type="button" class="btn wide" data-act="new">Предложить сходку</button></section>';
   if(!S.fbSel||!S.proposals[S.fbSel]||list.every(function(p){return p.id!==S.fbSel}))S.fbSel=list[0].id;
   var p=S.proposals[S.fbSel];p=Object.assign({id:S.fbSel},p);
   var R={};PEOPLE.forEach(function(x){var r=S.ratings[p.id+'__'+x.id];if(r)R[x.id]=r});
@@ -434,7 +435,7 @@ function renderSheet(){
     var p=Object.assign({id:sh.pid},S.proposals[sh.pid]||{}),i=info(p);
     var mineP=p.by===S.me;
     head='<h2>Готово</h2>';
-    body='<div class="done"><div class="tick"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><div class="big">'+(i.confirmed?'Сходка в силе':mineP?'Сходка предложена':'Ты в теме')+'</div><p class="note">'+(i.confirmed?esc(nice(p.date))+' · '+esc(p.time)+', '+esc(placeTitle(p.place))+'.':mineP?'Пацаны увидят приглашение на главной. Когда наберётся компания, нажми «Сходка в силе».':'Организатор, '+esc(person(p.by).name)+', объявит, что сходка в силе.')+'</p></div>'+(p.date?peopleRow(p):'');
+    body='<div class="done"><div class="tick"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><div class="big">'+(i.confirmed?'Сходка в силе':mineP?'Сходка предложена':'Ты в пиве')+'</div><p class="note">'+(i.confirmed?esc(nice(p.date))+' · '+esc(p.time)+', '+esc(placeTitle(p.place))+'.':mineP?'Пацаны увидят приглашение на главной. Когда наберётся компания, нажми «Сходка в силе».':'Организатор, '+esc(person(p.by).name)+', объявит, что сходка в силе.')+'</p></div>'+(p.date?peopleRow(p):'');
     foot='<button type="button" class="btn wide" data-act="sh-close">Готово</button>';
   } else if(sh.mode==='profile'){
     head='<h2>Профиль</h2>';
@@ -445,6 +446,7 @@ function renderSheet(){
       '<div class="divider"></div><div class="field"><h3>Наша туса · '+PEOPLE.length+'</h3><div class="mlist">'+PEOPLE.map(function(x){return '<div class="mrow"><img src="'+x.img+'" alt=""><div class="grow"><div style="font-weight:600">'+esc(x.name)+(x.id===S.me?' (ты)':'')+'</div><div class="favs">'+esc(x.tag||'')+(x.fav&&x.fav.length?(x.tag?' · ':'')+'любит '+esc(x.fav.join(', ')):'')+'</div></div></div>'}).join('')+'</div>'+
       (sh.invite?'<div class="lbl">Ссылка для друга — одноразовая:</div><div class="linkbox" id="invite-link">'+esc(sh.invite)+'</div><div class="g2"><button type="button" class="btn" data-act="inv-share">Отправить</button><button type="button" class="btn ghost" data-act="inv-copy">Скопировать</button></div>'
         :'<button type="button" class="btn ghost wide" data-act="invite">Пригласить друга</button>')+'</div>'+
+      '<div class="divider"></div><div class="field"><h3>Уведомления</h3>'+pushStatus()+'</div>'+
       '<button type="button" class="linkbtn" data-act="switch">Это не я — сменить пользователя</button>';
     foot='<button type="button" class="btn wide" data-act="pf-save"'+(sh.name.trim()?'':' disabled')+'>Сохранить</button>';
   } else if(sh.mode==='new'){
@@ -462,13 +464,13 @@ function renderSheet(){
     var pp=Object.assign({id:sh.pid},S.proposals[sh.pid]||{});
     head='<h2>'+esc(nice(pp.date||todayIso))+' · '+esc(pp.time||'')+'</h2>';
     body='<div class="where" style="margin-top:-6px"><b>'+esc(placeTitle(pp.place))+'</b><span>'+esc(placeAddr(pp.place))+'</span></div>'+picks(sh);
-    foot='<button type="button" class="btn wide" data-act="sh-answer">Готово, я в теме</button>';
+    foot='<button type="button" class="btn wide" data-act="sh-answer">Готово, я в пиве</button>';
   }
   el.innerHTML='<div class="scrim" data-act="sh-scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="'+(sh.mode==='profile'?'Профиль':'Сходка')+'"><div class="sheet-head">'+head+'<button type="button" class="iconbtn" data-act="sh-close" aria-label="Закрыть"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="sheet-body">'+body+'</div><div class="sheet-foot">'+foot+'</div></div></div>';
 }
 
 function render(){
-  rebuildPeople();
+  rebuildPeople();bridgeSync();
   if(S.me&&PEOPLE.length&&!PEOPLE.some(function(x){return x.id===S.me})&&(S.loaded||!db))S.me=null;
   var focusId=document.activeElement&&document.activeElement.id,sel=null;
   if(focusId&&document.activeElement.selectionStart!=null)sel=document.activeElement.selectionStart;
@@ -499,7 +501,8 @@ document.addEventListener('click',function(e){
   if(a==='sh-scrim'&&e.target!==b)return;
   var sh=S.sheet;
   switch(a){
-    case 'iam':S.me=v;S.askSwitch=false;lsSet('beer.me',v);render();scrollTo(0,0);break;
+    case 'iam':S.me=v;S.askSwitch=false;lsSet('beer.me',v);render();scrollTo(0,0);
+      if(S.push==='on')navigator.serviceWorker.ready.then(function(r){return r.pushManager.getSubscription()}).then(function(sub){if(sub)pushSave(sub)});break;
     case 'profile':var me0=person(S.me);S.sheet={mode:'profile',name:me0.name||'',tag:me0.tag||'',photo:me0.photo||'',fav:(me0.fav||[]).slice(),invite:null};render();break;
     case 'switch':S.sheet=null;S.me=null;lsSet('beer.me','');render();break;
     case 'pf-save':
@@ -526,6 +529,9 @@ document.addEventListener('click',function(e){
       S.me=nid;lsSet('beer.me',nid);S.join=null;S.joinForm=null;S.tab='home';lsSet('beer.tab','home');
       try{history.replaceState(null,'',location.pathname)}catch(e){}
       render();scrollTo(0,0);toast('Добро пожаловать в тусу!');break;
+    case 'push-on':pushOn();break;
+    case 'push-off':pushOff();break;
+    case 'push-nudge-off':lsSet('beer.pushnudge','no');render();break;
     case 'lock':var lp=S.proposals[v];if(!lp)break;put('proposals',v,Object.assign({},lp,{confirmed:true,confirmedAt:Date.now()}));toast('Сходка в силе — все увидят');break;
     case 'tab':S.tab=v;lsSet('beer.tab',v);render();scrollTo(0,0);break;
     case 'mon':S.calMonth=new Date(S.calMonth.getFullYear(),S.calMonth.getMonth()+(+v),1);render();break;
@@ -535,7 +541,7 @@ document.addEventListener('click',function(e){
     case 'new':S.tab=S.tab||'home';openNew(v||null);break;
     case 'join':
       var a0=ans(v,S.me);if(!a0||a0.in!==true){put('answers',v+'__'+S.me,Object.assign({},a0||{},{in:true,at:Date.now()}));
-        toast('Ты в теме · видят все')}
+        toast('Ты в пиве · видят все')}
       openAnswer(v);break;
     case 'pass':put('answers',v+'__'+S.me,{in:false,at:Date.now()});toast('Ты пас · видят все');break;
     case 'edit':openAnswer(v);break;
@@ -592,6 +598,47 @@ function shrinkPhoto(file,cb){
     cb(c.toDataURL('image/jpeg',0.8))};im.src=r.result};
   r.readAsDataURL(file);
 }
+function pushStatus(){
+  if(window.AndroidBridge)return '<p class="note">'+(window.AndroidBridge.notificationsAllowed&&!window.AndroidBridge.notificationsAllowed()?'Уведомления выключены в настройках Android. Включи их для «Пивного совета» в настройках телефона.':'Приложение проверяет новости примерно раз в 15 минут и присылает уведомление: новая сходка, кто ответил, сходка в силе, новенький в тусе.')+'</p>';
+  if(S.push==='on')return '<p class="note">Включены на этом устройстве: новая сходка, кто ответил, сходка в силе, новенький в тусе.</p><button type="button" class="linkbtn" data-act="push-off">Выключить</button>';
+  if(S.push==='need-install')return '<p class="note">На айфоне уведомления работают, только если приложение добавлено на экран «Домой»: «Поделиться» → «На экран „Домой“». Потом открой его с экрана и включи здесь.</p>';
+  if(S.push==='denied')return '<p class="note">Уведомления запрещены в настройках браузера для этого сайта.</p>';
+  if(S.push==='unsupported')return '<p class="note">Этот браузер не умеет уведомления.</p>';
+  if(S.push==='unavailable'||S.push==='unknown')return '<p class="note">Уведомления в веб-версии скоро заработают.</p>';
+  return '<button type="button" class="btn ghost wide" data-act="push-on"'+(S.pushBusy?' disabled':'')+'>'+(S.pushBusy?'Включаю…':'Включить уведомления')+'</button>';
+}
+function pushFn(){var c=window.BEER_CFG||{};return c.url?c.url+'/functions/v1/notify':''}
+function b64ToBytes(b){var pad='='.repeat((4-b.length%4)%4),s=(b+pad).replace(/-/g,'+').replace(/_/g,'/'),raw=atob(s),o=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)o[i]=raw.charCodeAt(i);return o}
+function pushInit(){
+  if(window.AndroidBridge){S.push='android';return}
+  var ios=/iPhone|iPad|iPod/.test(navigator.userAgent),standalone=navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){S.push=ios&&!standalone?'need-install':'unsupported';render();return}
+  if(Notification.permission==='denied'){S.push='denied';render();return}
+  var u=pushFn();
+  (u?fetch(u+'?vapid=1').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){if(!j.key)throw 0}):Promise.reject()).then(function(){return navigator.serviceWorker.register('sw.js')}).then(function(reg){return reg.pushManager.getSubscription()}).then(function(sub){
+    S.push=sub?'on':'off';render();if(sub&&S.me)pushSave(sub);
+  }).catch(function(){S.push='unavailable';render()});
+}
+function pushSave(sub){var u=pushFn();if(!u||!S.me)return Promise.resolve();
+  return fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'subscribe',member:S.me,sub:sub.toJSON?sub.toJSON():sub})});
+}
+function pushOn(){
+  S.pushBusy=true;render();
+  Notification.requestPermission().then(function(perm){
+    if(perm!=='granted'){S.push=perm==='denied'?'denied':'off';throw 'perm'}
+    return Promise.all([navigator.serviceWorker.register('sw.js').then(function(){return navigator.serviceWorker.ready}),fetch(pushFn()+'?vapid=1').then(function(r){return r.json()})]);
+  }).then(function(r){return r[0].pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToBytes(r[1].key)})})
+  .then(function(sub){return pushSave(sub).then(function(){S.push='on';toast('Уведомления включены')})})
+  .catch(function(e){if(e!=='perm')toast('Не получилось включить уведомления')})
+  .then(function(){S.pushBusy=false;render()});
+}
+function pushOff(){
+  navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription()}).then(function(sub){
+    if(!sub)return;var ep=sub.endpoint;return sub.unsubscribe().then(function(){var u=pushFn();if(u)return fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'unsubscribe',endpoint:ep})})});
+  }).then(function(){S.push='off';render();toast('Уведомления выключены')});
+}
+var lastBridgeMe=null;
+function bridgeSync(){if(!window.AndroidBridge)return;try{var c=window.BEER_CFG||{};if(lastBridgeMe===null&&c.url)window.AndroidBridge.setConfig(c.url,c.key);if(S.me&&S.me!==lastBridgeMe){window.AndroidBridge.setMe(S.me);lastBridgeMe=S.me}}catch(e){}}
 function copyLink(t){
   var done=function(){toast('Ссылка скопирована')};
   try{navigator.clipboard.writeText(t).then(done,function(){selectLink()})}catch(e){selectLink()}
@@ -609,6 +656,7 @@ window.appBack=function(){
 };
 
 render();
+pushInit();
 
 /* ---------- live sync ---------- */
 var cfg=window.BEER_CFG||{};
