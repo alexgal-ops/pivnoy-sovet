@@ -4,3 +4,8 @@
 
 APK собирается GitHub Actions при каждом пуше в `main` и появляется в Releases.
 Данные хранятся на телефоне (без сервера).
+
+## Уведомления
+- Android: фоновая проверка базы ~раз в 15 минут (`PollJob.java`), системные уведомления.
+- Веб и айфон (с экрана «Домой»): Web Push. Функция `supabase/functions/notify` (развёрнута в Supabase, проверка JWT выключена),
+  триггер `docs_notify` на таблице `docs` и таблицы `push_keys`, `push_subs`, `push_sent` — см. `supabase/notify-setup.sql`.
