@@ -79,7 +79,7 @@ h3{font-size:13px;font-weight:700;margin:0;color:var(--muted);text-transform:upp
 .where b{display:block;font-size:15px}
 .where span{font-size:13px;color:var(--muted)}
 .maplink{font-size:13px;color:var(--amber)}
-.people{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px 8px;text-align:center}
 .person{display:flex;flex-direction:column;align-items:center;gap:5px;position:relative}
 .ava{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--line)}
 .ava.in{border-color:var(--amber)}
@@ -161,6 +161,17 @@ details[open] summary{margin-bottom:8px}
 .pickbtn b{font-family:var(--display);font-size:17px;font-weight:600}
 .pickbtn span{display:block;font-size:13px;color:var(--muted)}
 .switchbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.avpick{display:flex;align-items:center;gap:16px}
+.avpick img{width:88px;height:88px;border-radius:50%;object-fit:cover;border:2px solid var(--amber)}
+.filebtn{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);font-weight:600;cursor:pointer}
+.filebtn input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.filebtn:focus-within{outline:2px solid var(--amber);outline-offset:2px}
+.mlist{display:flex;flex-direction:column;gap:10px}
+.mrow{display:flex;align-items:center;gap:12px}
+.mrow img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex:none}
+.mrow .grow{flex:1;min-width:0}
+.linkbox{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;word-break:break-all;user-select:all;-webkit-user-select:all}
+.favs{font-size:12px;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -192,13 +203,23 @@ details[open] summary{margin-bottom:8px}
 <script src="config.js"></script>
 <script>
 (function(){
-var PEOPLE=[
-  {id:'sanya',name:'Саня',gen:'Сани',tag:'лысый стратег',img:'img/sanya.jpg'},
-  {id:'dima',name:'Диман',gen:'Димана',tag:'в панаме',img:'img/dima.jpg'},
-  {id:'tyoma',name:'Тёма',gen:'Тёмы',tag:'при исполнении',img:'img/tyoma.jpg'}
+var SEED=[
+  {id:'sanya',name:'Саня',gen:'Сани',tag:'лысый стратег',photo:'img/sanya.jpg',joinedAt:1},
+  {id:'dima',name:'Диман',gen:'Димана',tag:'в панаме',photo:'img/dima.jpg',joinedAt:2},
+  {id:'tyoma',name:'Тёма',gen:'Тёмы',tag:'при исполнении',photo:'img/tyoma.jpg',joinedAt:3}
 ];
+var NOAVA='icons/icon-192.png';
+var APP_URL='https://alexgal-ops.github.io/pivnoy-sovet/';
+var PEOPLE=[];
+function rebuildPeople(){
+  var ids=Object.keys(S.members||{});
+  var list=ids.length?ids.map(function(id){return Object.assign({id:id},S.members[id])}):SEED.map(function(x){return Object.assign({},x)});
+  PEOPLE=list.filter(function(x){return x&&x.name&&!x.left}).sort(function(a,b){return (a.joinedAt||0)-(b.joinedAt||0)});
+  PEOPLE.forEach(function(x){x.img=x.photo||NOAVA});
+}
+function homeLabel(id){var x=person(id);return x.gen?'У '+x.gen:'Хата: '+x.name}
+function placeOpts(){return [['bar','Бар']].concat(PEOPLE.map(function(x){return [x.id,homeLabel(x.id)]})).concat([['online','Онлайн']])}
 var GROUP='img/group.jpg';
-var PLACE_OPTS=[['bar','Бар'],['sanya','У Сани'],['dima','У Димана'],['tyoma','У Тёмы'],['online','Онлайн']];
 var TIMES=['17:00','18:00','19:00','20:00','21:00','22:00'];
 var BEERS=['Лагер','Чешское','IPA','Стаут','Пшеничное','Сидр','Безалкогольное'];
 var STRONG=['Виски','Ром','Текила','Водка','Ягер','Без крепкого'];
@@ -218,7 +239,7 @@ var CK='<svg class="ck" width="14" height="14" viewBox="0 0 24 24" fill="none" s
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-function person(id){for(var i=0;i<PEOPLE.length;i++)if(PEOPLE[i].id===id)return PEOPLE[i];return {id:id,name:'?',gen:'?',img:''}}
+function person(id){for(var i=0;i<PEOPLE.length;i++)if(PEOPLE[i].id===id)return PEOPLE[i];var m=S.members&&S.members[id];if(m)return Object.assign({id:id,img:m.photo||NOAVA},m);return {id:id,name:'Кто-то',gen:'',img:NOAVA}}
 function pad(n){return n<10?'0'+n:''+n}
 function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
 function parse(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
@@ -230,11 +251,11 @@ var todayIso=iso(new Date());
 
 var S={
   me:lsGet('beer.me'), tab:lsGet('beer.tab')||'home',
-  proposals:{}, answers:{}, ratings:{}, comments:{}, homes:{},
+  proposals:{}, answers:{}, ratings:{}, comments:{}, homes:{}, members:{}, invites:{},
+  loaded:false, join:null, joinForm:null,
   sheet:null, calMonth:null, selDate:todayIso, fbSel:null, draft:'',
   online:null, err:'', askSwitch:false
 };
-if(!person(S.me).img)S.me=null;
 S.calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 
 /* ---------- derived ---------- */
@@ -243,9 +264,10 @@ function plist(){return Object.keys(S.proposals).map(function(id){return Object.
 function info(p){
   var inn=[],out=[],none=[];
   PEOPLE.forEach(function(x){var a=ans(p.id,x.id);if(a&&a.in===true)inn.push(x.id);else if(a&&a.in===false)out.push(x.id);else none.push(x.id)});
-  return {inn:inn,out:out,none:none,confirmed:inn.length===3};
+  var legacy=p.confirmed===undefined&&SEED.every(function(x){var a=ans(p.id,x.id);return a&&a.in===true});
+  return {inn:inn,out:out,none:none,confirmed:p.confirmed===true||legacy};
 }
-function placeTitle(pl){if(!pl)return '';if(pl.type==='bar')return pl.name?'Бар «'+pl.name+'»':'Бар';if(pl.type==='online')return 'Онлайн-созвон';return 'У '+person(pl.type).gen}
+function placeTitle(pl){if(!pl)return '';if(pl.type==='bar')return pl.name?'Бар «'+pl.name+'»':'Бар';if(pl.type==='online')return 'Онлайн-созвон';return homeLabel(pl.type)}
 function placeAddr(pl){if(!pl||pl.type==='online')return 'каждый со своим пивом, ссылка в чате';return pl.address||'адрес не указан'}
 function mapUrl(pl){return pl&&pl.address&&pl.type!=='online'?'https://yandex.ru/maps/?text='+encodeURIComponent(pl.address+(pl.type==='bar'&&pl.name?' '+pl.name:'')):''}
 function pendingForMe(){return plist().filter(function(p){return p.date>=todayIso&&p.by!==S.me&&!ans(p.id,S.me)})}
@@ -256,8 +278,8 @@ function unratedPast(){return pastConfirmed().filter(function(p){var r=S.ratings
 
 /* ---------- storage: phone cache + shared base ---------- */
 var db=null;
-function persist(){lsSet('beer.v2',JSON.stringify({proposals:S.proposals,answers:S.answers,ratings:S.ratings,comments:S.comments,homes:S.homes}))}
-var COLL={proposals:'proposals',answers:'answers',ratings:'ratings',comments:'comments',homes:'homes'};
+function persist(){var o={};Object.keys(COLL).forEach(function(c){o[c]=S[c]});lsSet('beer.v2',JSON.stringify(o))}
+var COLL={proposals:'proposals',answers:'answers',ratings:'ratings',comments:'comments',homes:'homes',members:'members',invites:'invites'};
 function applyRow(id,data){var i=id.indexOf('/'),c=id.slice(0,i),k=id.slice(i+1);if(COLL[c])S[c][k]=data}
 function dropRow(id){var i=id.indexOf('/'),c=id.slice(0,i),k=id.slice(i+1);if(COLL[c])delete S[c][k]}
 function fail(e){toast('Не отправилось в общую базу. Проверь интернет.');console.log(e)}
@@ -270,6 +292,8 @@ function del(coll,key){
   if(db)db.from('docs').delete().eq('id',coll+'/'+key).then(function(r){if(r.error)fail(r.error)},fail);
 }
 try{var saved=JSON.parse(lsGet('beer.v2')||'null');if(saved)Object.keys(COLL).forEach(function(c){S[c]=saved[c]||{}})}catch(e){}
+try{var qs=new URLSearchParams(location.search);S.join=qs.get('join')||null}catch(e){}
+rebuildPeople();
 
 /* ---------- toast ---------- */
 var tt=null;
@@ -297,12 +321,27 @@ function aggregate(p){
 /* ---------- screens ---------- */
 function renderHeader(){
   var h=document.getElementById('hdr');var p=person(S.me);
-  h.innerHTML='<div><div class="brand">Пивной совет</div><div class="sub">Саня · Диман · Тёма</div></div>'+
-   (S.me?'<button type="button" class="me" data-act="askswitch" aria-label="Ты '+p.name+'. Сменить пользователя"><img src="'+p.img+'" alt=""><span>'+p.name+'</span></button>':'');
+  h.innerHTML='<div><div class="brand">Пивной совет</div><div class="sub">'+esc(PEOPLE.slice(0,4).map(function(x){return x.name}).join(' · ')+(PEOPLE.length>4?' и ещё '+(PEOPLE.length-4):''))+'</div></div>'+
+   (S.me?'<button type="button" class="me" data-act="profile" aria-label="Мой профиль: '+esc(p.name)+'"><img src="'+p.img+'" alt=""><span>'+esc(p.name)+'</span></button>':'');
 }
 function viewPick(){
   return '<div class="pick"><h1>Кто ты?</h1><p class="note">Выбери себя один раз — телефон запомнит. Твои ответы и оценки пойдут от твоего имени.</p>'+
-   PEOPLE.map(function(p){return '<button type="button" class="pickbtn" data-act="iam" data-v="'+p.id+'"><img src="'+p.img+'" alt=""><div><b>'+p.name+'</b><span>'+p.tag+'</span></div></button>'}).join('')+'</div>';
+   PEOPLE.map(function(p){return '<button type="button" class="pickbtn" data-act="iam" data-v="'+p.id+'"><img src="'+p.img+'" alt=""><div><b>'+esc(p.name)+'</b><span>'+esc(p.tag||'')+'</span></div></button>'}).join('')+
+   '<p class="note">Нет тебя в списке? Попроси у кого-нибудь из тусы ссылку-приглашение.</p></div>';
+}
+function photoField(id,src){
+  return '<div class="avpick"><img src="'+esc(src||NOAVA)+'" alt="Фото профиля"><label class="filebtn">'+(src&&src!==NOAVA?'Сменить фото':'Выбрать фото')+'<input id="'+id+'" type="file" accept="image/*"></label></div>';
+}
+function viewJoin(){
+  if(db&&!S.loaded)return '<div class="pick"><h1>Проверяю приглашение…</h1></div>';
+  var inv=S.invites[S.join];
+  if(db&&(!inv||inv.usedBy))return '<div class="pick"><h1>Ссылка не работает</h1><p class="note">'+(inv?'Это приглашение уже использовали.':'Такого приглашения нет.')+' Попроси у друзей новую ссылку.</p>'+(PEOPLE.length?'<button type="button" class="btn ghost" data-act="jn-cancel">У меня уже есть профиль</button>':'')+'</div>';
+  var by=person(inv?inv.by:'');var f=S.joinForm||(S.joinForm={name:'',tag:'',photo:''});
+  return '<div class="pick">'+(inv?'<div class="who"><img src="'+by.img+'" alt=""><div><div style="font-weight:700">'+esc(by.name)+' зовёт тебя</div><div class="lbl">в Пивной совет — решаем, когда пьём пиво</div></div></div>':'')+
+    '<h1>Давай знакомиться</h1>'+photoField('jn-file',f.photo)+
+    '<div class="field"><label class="lbl" for="jn-name">Как тебя звать</label><input id="jn-name" type="text" data-k="name" maxlength="24" autocomplete="nickname" placeholder="Например, Лёха" value="'+esc(f.name)+'"></div>'+
+    '<div class="field"><label class="lbl" for="jn-tag">Подпись (необязательно)</label><input id="jn-tag" type="text" data-k="tag" maxlength="40" placeholder="Например, главный по кальяну" value="'+esc(f.tag)+'"></div>'+
+    '<button type="button" class="btn wide" data-act="jn-submit"'+(f.name.trim()?'':' disabled')+'>Вступить в тусу</button></div>';
 }
 function inviteCard(p){
   var by=person(p.by);
@@ -312,13 +351,14 @@ function inviteCard(p){
 }
 function meetCard(p,big){
   var i=info(p),mine=ans(p.id,S.me);
-  var h='<section class="card">'+(i.confirmed?'<span class="status ok">Сходка подтверждена · все в теме</span>':'<span class="status">Ждём ответа · '+i.inn.length+'/3 в теме</span>')+
+  var h='<section class="card">'+(i.confirmed?'<span class="status ok">Сходка в силе · '+i.inn.length+' в теме</span>':'<span class="status">Собираемся · '+i.inn.length+' из '+PEOPLE.length+' в теме</span>')+
     '<div class="when">'+esc(nice(p.date))+' · '+esc(p.time)+'</div>'+whereBlock(p)+peopleRow(p);
   if(i.confirmed||big)h+='<div class="divider"></div>'+aggregate(p);
   if(mine&&mine.in===true)h+='<button type="button" class="btn ghost wide" data-act="edit" data-v="'+p.id+'">Изменить мой выбор</button>';
   else if(mine&&mine.in===false)h+='<div class="switchbar"><span class="lbl">Ты пас.</span><button type="button" class="btn ghost" data-act="join" data-v="'+p.id+'">Передумал — я в теме</button></div>';
   else if(p.by!==S.me)h+='<div class="g2"><button type="button" class="btn" data-act="join" data-v="'+p.id+'">Я в теме</button><button type="button" class="btn ghost" data-act="pass" data-v="'+p.id+'">Пас</button></div>';
-  if(p.by===S.me&&!i.confirmed)h+='<button type="button" class="linkbtn" data-act="delprop" data-v="'+p.id+'">Отменить предложение</button>';
+  if(p.by===S.me&&!i.confirmed)h+='<button type="button" class="btn wide" data-act="lock" data-v="'+p.id+'"'+(i.inn.length<2?' disabled':'')+'>'+(i.inn.length<2?'Сходка в силе — ждём хотя бы одного':'Сходка в силе — '+i.inn.length+' в теме')+'</button>';
+  if(p.by===S.me)h+='<button type="button" class="linkbtn" data-act="delprop" data-v="'+p.id+'">'+(i.confirmed?'Отменить сходку':'Отменить предложение')+'</button>';
   return h+'</section>';
 }
 function viewHome(){
@@ -373,11 +413,11 @@ function viewFb(){
 
 /* ---------- sheet ---------- */
 function openNew(date){
-  S.sheet={mode:'new',date:date||null,time:null,place:null,barName:'',address:'',beer:[],strong:[],food:[],plus:0,extras:{},stage:'form'};render();
+  S.sheet={mode:'new',date:date||null,time:null,place:null,barName:'',address:'',beer:(person(S.me).fav||[]).slice(),strong:[],food:[],plus:0,extras:{},stage:'form'};render();
 }
 function openAnswer(pid){
   var a=ans(pid,S.me)||{};
-  S.sheet={mode:'answer',pid:pid,beer:(a.beer||[]).slice(),strong:(a.strong||[]).slice(),food:(a.food||[]).slice(),plus:a.plus||0,extras:Object.assign({},a.extras||{}),stage:'form'};render();
+  S.sheet={mode:'answer',pid:pid,beer:(a.beer||person(S.me).fav||[]).slice(),strong:(a.strong||[]).slice(),food:(a.food||[]).slice(),plus:a.plus||0,extras:Object.assign({},a.extras||{}),stage:'form'};render();
 }
 function picks(sh){
   return '<div class="field"><h3>Пиво</h3><div class="row">'+opts(BEERS,sh.beer,'sh-multi','beer')+'</div></div>'+
@@ -392,18 +432,29 @@ function renderSheet(){
   var head,body,foot;
   if(sh.stage==='done'){
     var p=Object.assign({id:sh.pid},S.proposals[sh.pid]||{}),i=info(p);
-    var others=PEOPLE.filter(function(x){return x.id!==S.me&&i.inn.indexOf(x.id)<0}).map(function(x){return x.name});
+    var mineP=p.by===S.me;
     head='<h2>Готово</h2>';
-    body='<div class="done"><div class="tick"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><div class="big">Сходка подтверждена</div><p class="note">'+(i.confirmed?'Все в теме. '+esc(nice(p.date))+' · '+esc(p.time)+', '+esc(placeTitle(p.place))+'.':'Ты в теме. Ждём ответа: '+esc(others.join(' и '))+(others.length>1?'. Они увидят':'. Он увидит')+' приглашение на главной.')+'</p></div>'+(p.date?peopleRow(p):'');
+    body='<div class="done"><div class="tick"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><div class="big">'+(i.confirmed?'Сходка в силе':mineP?'Сходка предложена':'Ты в теме')+'</div><p class="note">'+(i.confirmed?esc(nice(p.date))+' · '+esc(p.time)+', '+esc(placeTitle(p.place))+'.':mineP?'Пацаны увидят приглашение на главной. Когда наберётся компания, нажми «Сходка в силе».':'Организатор, '+esc(person(p.by).name)+', объявит, что сходка в силе.')+'</p></div>'+(p.date?peopleRow(p):'');
     foot='<button type="button" class="btn wide" data-act="sh-close">Готово</button>';
+  } else if(sh.mode==='profile'){
+    head='<h2>Профиль</h2>';
+    body=photoField('pf-file',sh.photo)+
+      '<div class="field"><label class="lbl" for="pf-name">Имя</label><input id="pf-name" type="text" data-k="name" maxlength="24" value="'+esc(sh.name)+'"></div>'+
+      '<div class="field"><label class="lbl" for="pf-tag">Подпись</label><input id="pf-tag" type="text" data-k="tag" maxlength="40" placeholder="Например, лысый стратег" value="'+esc(sh.tag)+'"></div>'+
+      '<div class="field"><h3>Любимое пиво</h3><div class="lbl">Подставим, когда идёшь на сходку</div><div class="row">'+opts(BEERS,sh.fav,'sh-multi','fav')+'</div></div>'+
+      '<div class="divider"></div><div class="field"><h3>Наша туса · '+PEOPLE.length+'</h3><div class="mlist">'+PEOPLE.map(function(x){return '<div class="mrow"><img src="'+x.img+'" alt=""><div class="grow"><div style="font-weight:600">'+esc(x.name)+(x.id===S.me?' (ты)':'')+'</div><div class="favs">'+esc(x.tag||'')+(x.fav&&x.fav.length?(x.tag?' · ':'')+'любит '+esc(x.fav.join(', ')):'')+'</div></div></div>'}).join('')+'</div>'+
+      (sh.invite?'<div class="lbl">Ссылка для друга — одноразовая:</div><div class="linkbox" id="invite-link">'+esc(sh.invite)+'</div><div class="g2"><button type="button" class="btn" data-act="inv-share">Отправить</button><button type="button" class="btn ghost" data-act="inv-copy">Скопировать</button></div>'
+        :'<button type="button" class="btn ghost wide" data-act="invite">Пригласить друга</button>')+'</div>'+
+      '<button type="button" class="linkbtn" data-act="switch">Это не я — сменить пользователя</button>';
+    foot='<button type="button" class="btn wide" data-act="pf-save"'+(sh.name.trim()?'':' disabled')+'>Сохранить</button>';
   } else if(sh.mode==='new'){
     head='<h2>'+(sh.date?'Сходка · '+esc(nice(sh.date)):'Новая сходка')+'</h2>';
     var dates='';if(!sh.date||sh.pickDate){var arr=[];for(var k=0;k<14;k++){var d=new Date();d.setDate(d.getDate()+k);arr.push([iso(d),(k===0?'Сегодня':k===1?'Завтра':nice(iso(d)))])}dates='<div class="field"><h3>Когда</h3><div class="row">'+opts(arr,sh.date,'sh-set','date')+'</div></div>';sh.pickDate=true}
     var placeExtra='';
     if(sh.place==='bar')placeExtra='<div class="field"><label class="lbl" for="sh-bar">Название бара</label><input id="sh-bar" type="text" data-k="barName" maxlength="60" placeholder="Например, «Пивная №1»" value="'+esc(sh.barName)+'"><label class="lbl" for="sh-addr">Адрес</label><input id="sh-addr" type="text" data-k="address" maxlength="120" placeholder="Улица, дом" value="'+esc(sh.address)+'"></div>';
-    else if(sh.place&&sh.place!=='online')placeExtra='<div class="field"><label class="lbl" for="sh-addr">Адрес — у '+esc(person(sh.place).gen)+'</label><input id="sh-addr" type="text" data-k="address" maxlength="120" placeholder="Улица, дом, квартира" value="'+esc(sh.address)+'"></div>';
+    else if(sh.place&&sh.place!=='online')placeExtra='<div class="field"><label class="lbl" for="sh-addr">Адрес — '+esc(homeLabel(sh.place).toLowerCase())+'</label><input id="sh-addr" type="text" data-k="address" maxlength="120" placeholder="Улица, дом, квартира" value="'+esc(sh.address)+'"></div>';
     else if(sh.place==='online')placeExtra='<p class="note">Каждый со своим пивом, ссылку кидаем в чат.</p>';
-    body=dates+'<div class="field"><h3>Где</h3><div class="row">'+opts(PLACE_OPTS,sh.place,'sh-place')+'</div>'+placeExtra+'</div>'+
+    body=dates+'<div class="field"><h3>Где</h3><div class="row">'+opts(placeOpts(),sh.place,'sh-place')+'</div>'+placeExtra+'</div>'+
       '<div class="field"><h3>Во сколько</h3><div class="row">'+opts(TIMES,sh.time,'sh-set','time')+'</div></div>'+picks(sh);
     var miss=[];if(!sh.date)miss.push('день');if(!sh.place)miss.push('место');if(!sh.time)miss.push('время');if(sh.place==='bar'&&!sh.barName.trim())miss.push('название бара');
     foot=(miss.length?'<div class="lbl" style="text-align:center">Осталось выбрать: '+miss.join(', ')+'</div>':'')+'<button type="button" class="btn wide" data-act="sh-confirm"'+(miss.length?' disabled':'')+'>Подтвердить сходку</button>';
@@ -413,10 +464,12 @@ function renderSheet(){
     body='<div class="where" style="margin-top:-6px"><b>'+esc(placeTitle(pp.place))+'</b><span>'+esc(placeAddr(pp.place))+'</span></div>'+picks(sh);
     foot='<button type="button" class="btn wide" data-act="sh-answer">Готово, я в теме</button>';
   }
-  el.innerHTML='<div class="scrim" data-act="sh-scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="Сходка"><div class="sheet-head">'+head+'<button type="button" class="iconbtn" data-act="sh-close" aria-label="Закрыть"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="sheet-body">'+body+'</div><div class="sheet-foot">'+foot+'</div></div></div>';
+  el.innerHTML='<div class="scrim" data-act="sh-scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="'+(sh.mode==='profile'?'Профиль':'Сходка')+'"><div class="sheet-head">'+head+'<button type="button" class="iconbtn" data-act="sh-close" aria-label="Закрыть"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="sheet-body">'+body+'</div><div class="sheet-foot">'+foot+'</div></div></div>';
 }
 
 function render(){
+  rebuildPeople();
+  if(S.me&&PEOPLE.length&&!PEOPLE.some(function(x){return x.id===S.me})&&(S.loaded||!db))S.me=null;
   var focusId=document.activeElement&&document.activeElement.id,sel=null;
   if(focusId&&document.activeElement.selectionStart!=null)sel=document.activeElement.selectionStart;
   var sb=document.querySelector('.sheet-body'),sbTop=sb?sb.scrollTop:0;
@@ -424,7 +477,8 @@ function render(){
   var main=document.getElementById('main'),nav=document.getElementById('nav');
   var h='';
   if(S.online===false)h+='<div class="banner">Нет связи с общей базой. Проверь интернет — как связь появится, всё обновится само.</div>';
-  if(S.askSwitch&&S.me)h+='<div class="card"><div class="switchbar"><span>Ты <b>'+person(S.me).name+'</b>. Сменить пользователя?</span><span class="row"><button type="button" class="btn ghost" data-act="noswitch">Нет</button><button type="button" class="btn" data-act="switch">Сменить</button></span></div></div>';
+  if(S.join&&S.me&&S.loaded){S.join=null;try{history.replaceState(null,'',location.pathname)}catch(e){}}
+  if(S.join){main.innerHTML=h+viewJoin();nav.hidden=true;renderSheet();restoreFocus(focusId,sel);return}
   if(!S.me){main.innerHTML=h+viewPick();nav.hidden=true;renderSheet();return}
   nav.hidden=false;
   ['home','cal','fb'].forEach(function(t){document.getElementById('t-'+t).className=S.tab===t?'act':''});
@@ -434,8 +488,9 @@ function render(){
   main.innerHTML=h;
   renderSheet();
   var sb2=document.querySelector('.sheet-body');if(sb2)sb2.scrollTop=sbTop;
-  if(focusId){var f=document.getElementById(focusId);if(f&&f.focus){f.focus();if(sel!=null&&f.setSelectionRange)f.setSelectionRange(sel,sel)}}
+  restoreFocus(focusId,sel);
 }
+function restoreFocus(focusId,sel){if(focusId){var f=document.getElementById(focusId);if(f&&f.focus&&f.type!=='file'){f.focus();if(sel!=null&&f.setSelectionRange)try{f.setSelectionRange(sel,sel)}catch(e){}}}}
 
 /* ---------- events ---------- */
 document.addEventListener('click',function(e){
@@ -445,9 +500,33 @@ document.addEventListener('click',function(e){
   var sh=S.sheet;
   switch(a){
     case 'iam':S.me=v;S.askSwitch=false;lsSet('beer.me',v);render();scrollTo(0,0);break;
-    case 'askswitch':S.askSwitch=!S.askSwitch;render();scrollTo(0,0);break;
-    case 'noswitch':S.askSwitch=false;render();break;
-    case 'switch':S.me=null;S.askSwitch=false;lsSet('beer.me','');render();break;
+    case 'profile':var me0=person(S.me);S.sheet={mode:'profile',name:me0.name||'',tag:me0.tag||'',photo:me0.photo||'',fav:(me0.fav||[]).slice(),invite:null};render();break;
+    case 'switch':S.sheet=null;S.me=null;lsSet('beer.me','');render();break;
+    case 'pf-save':
+      if(!sh.name.trim())break;
+      var cur=Object.assign({},S.members[S.me]||SEED.filter(function(x){return x.id===S.me})[0]||{joinedAt:Date.now()});
+      cur.name=sh.name.trim();cur.tag=sh.tag.trim();cur.fav=sh.fav;if(sh.photo)cur.photo=sh.photo;
+      put('members',S.me,cur);S.sheet=null;render();toast('Профиль сохранён');break;
+    case 'invite':
+      var code=Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4);
+      put('invites',code,{by:S.me,at:Date.now()});sh.invite=APP_URL+'?join='+code;render();break;
+    case 'inv-share':
+      var txt='Залетай в Пивной совет — там решаем, когда пьём пиво: '+sh.invite;
+      if(window.AndroidBridge&&window.AndroidBridge.share){window.AndroidBridge.share(txt)}
+      else if(navigator.share){navigator.share({title:'Пивной совет',text:txt}).catch(function(){})}
+      else copyLink(sh.invite);
+      break;
+    case 'inv-copy':copyLink(sh.invite);break;
+    case 'jn-cancel':S.join=null;try{history.replaceState(null,'',location.pathname)}catch(e){};render();break;
+    case 'jn-submit':
+      var jf=S.joinForm;if(!jf||!jf.name.trim())break;
+      var inv=S.invites[S.join]||{by:null};var nid='u'+newId();
+      put('members',nid,{name:jf.name.trim(),tag:jf.tag.trim(),photo:jf.photo||'',fav:[],joinedAt:Date.now(),invitedBy:inv.by||null});
+      if(S.invites[S.join])put('invites',S.join,Object.assign({},inv,{usedBy:nid,usedAt:Date.now()}));
+      S.me=nid;lsSet('beer.me',nid);S.join=null;S.joinForm=null;S.tab='home';lsSet('beer.tab','home');
+      try{history.replaceState(null,'',location.pathname)}catch(e){}
+      render();scrollTo(0,0);toast('Добро пожаловать в тусу!');break;
+    case 'lock':var lp=S.proposals[v];if(!lp)break;put('proposals',v,Object.assign({},lp,{confirmed:true,confirmedAt:Date.now()}));toast('Сходка в силе — все увидят');break;
     case 'tab':S.tab=v;lsSet('beer.tab',v);render();scrollTo(0,0);break;
     case 'mon':S.calMonth=new Date(S.calMonth.getFullYear(),S.calMonth.getMonth()+(+v),1);render();break;
     case 'day':
@@ -456,7 +535,7 @@ document.addEventListener('click',function(e){
     case 'new':S.tab=S.tab||'home';openNew(v||null);break;
     case 'join':
       var a0=ans(v,S.me);if(!a0||a0.in!==true){put('answers',v+'__'+S.me,Object.assign({},a0||{},{in:true,at:Date.now()}));
-        var p0=Object.assign({id:v},S.proposals[v]);toast(info(p0).confirmed?'Все в теме — сходка подтверждена!':'Ты в теме · видят все')}
+        toast('Ты в теме · видят все')}
       openAnswer(v);break;
     case 'pass':put('answers',v+'__'+S.me,{in:false,at:Date.now()});toast('Ты пас · видят все');break;
     case 'edit':openAnswer(v);break;
@@ -488,16 +567,36 @@ document.addEventListener('click',function(e){
     case 'sh-answer':
       var key=sh.pid+'__'+S.me;
       put('answers',key,{in:true,beer:sh.beer,strong:sh.strong,food:sh.food,plus:sh.plus,extras:sh.extras,at:Date.now()});
-      var pp=Object.assign({id:sh.pid},S.proposals[sh.pid]);var ok=info(pp).confirmed;
-      S.sheet={mode:'answer',stage:'done',pid:sh.pid};render();toast(ok?'Все в теме — сходка подтверждена!':'Сохранено · видят все');break;
+      S.sheet={mode:'answer',stage:'done',pid:sh.pid};render();toast('Сохранено · видят все');break;
   }
 });
 document.addEventListener('input',function(e){
   if(e.target.id==='cmt')S.draft=e.target.value;
   var k=e.target.getAttribute&&e.target.getAttribute('data-k');
+  var form=S.join?S.joinForm:S.sheet;
+  if(form&&k&&(k==='name'||k==='tag')){form[k]=e.target.value;var sb2=document.querySelector('[data-act=jn-submit],[data-act=pf-save]');if(sb2)sb2.disabled=!form.name.trim();}
   if(S.sheet&&k&&(k==='barName'||k==='address')){S.sheet[k]=e.target.value;
     if(k==='barName'){var f=document.querySelector('[data-act=sh-confirm]');var sh=S.sheet;var miss=!sh.date||!sh.place||!sh.time||!sh.barName.trim();if(f)f.disabled=miss;var hint=document.querySelector('.sheet-foot .lbl');if(hint&&!miss)hint.remove()}}
 });
+document.addEventListener('change',function(e){
+  var id=e.target.id;if(id!=='pf-file'&&id!=='jn-file')return;
+  var file=e.target.files&&e.target.files[0];if(!file)return;
+  shrinkPhoto(file,function(url){if(!url){toast('Не получилось открыть фото');return}
+    if(id==='pf-file'&&S.sheet)S.sheet.photo=url;if(id==='jn-file'&&S.joinForm)S.joinForm.photo=url;render()});
+});
+function shrinkPhoto(file,cb){
+  var r=new FileReader();r.onerror=function(){cb(null)};
+  r.onload=function(){var im=new Image();im.onerror=function(){cb(null)};im.onload=function(){
+    var N=256,c=document.createElement('canvas');c.width=N;c.height=N;var x=c.getContext('2d');
+    var s0=Math.min(im.width,im.height);x.drawImage(im,(im.width-s0)/2,(im.height-s0)/2,s0,s0,0,0,N,N);
+    cb(c.toDataURL('image/jpeg',0.8))};im.src=r.result};
+  r.readAsDataURL(file);
+}
+function copyLink(t){
+  var done=function(){toast('Ссылка скопирована')};
+  try{navigator.clipboard.writeText(t).then(done,function(){selectLink()})}catch(e){selectLink()}
+}
+function selectLink(){var el=document.getElementById('invite-link');if(!el)return;var rg=document.createRange();rg.selectNodeContents(el);var sl=getSelection();sl.removeAllRanges();sl.addRange(rg);toast('Ссылка выделена — скопируй её')}
 document.addEventListener('submit',function(e){
   if(e.target.id!=='cform')return;e.preventDefault();
   var t=(S.draft||'').trim();if(!t||!S.fbSel)return;
@@ -520,6 +619,8 @@ if(cfg.url&&cfg.key&&window.supabase){
       if(r.error){if(++pullFails>=2){S.online=false;render()}return}
       pullFails=0;S.online=true;Object.keys(COLL).forEach(function(c){S[c]={}});
       (r.data||[]).forEach(function(row){applyRow(row.id,row.data)});
+      var firstLoad=!S.loaded;S.loaded=true;
+      if(firstLoad&&!Object.keys(S.members).length)SEED.forEach(function(x){var m=Object.assign({},x);delete m.id;put('members',x.id,m)});
       persist();render();
     },function(){if(++pullFails>=2){S.online=false;render()}});
   };
